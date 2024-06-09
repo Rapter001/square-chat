@@ -1,4 +1,4 @@
-## Overview - MANAGE PROFILE IS BROKEN 
+## Overview
 
 Square Chat is a sleek and modern web chat application designed for simplicity and efficiency.
 
