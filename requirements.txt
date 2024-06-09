@@ -6,3 +6,4 @@ eventlet
 Werkzeug
 pillow
 flask_wtf
+email_validator
