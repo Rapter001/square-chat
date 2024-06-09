@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Square Chat | Join a room</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img/square-chat.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Join a Chat Room</h2>
+        <form action="/" method="post">
+            <label for="room">Room:</label>
+            <input type="text" id="room" name="room" required>
+            <button type="submit">Join</button>
+        </form>
+        <a href="{{ url_for('profile') }}" class="button">Manage Profile</a>
+        <a href="{{ url_for('logout') }}" class="button">Logout</a>
+    </div>
+</body>
+</html>
