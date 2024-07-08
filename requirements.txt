@@ -1,9 +1,0 @@
-Flask
-Flask-SocketIO
-Flask-SQLAlchemy
-Flask-Login
-eventlet
-Werkzeug
-pillow
-flask_wtf
-email_validator
