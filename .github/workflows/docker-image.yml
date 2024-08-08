@@ -27,5 +27,5 @@ jobs:
 
     - name: Push the Docker image to Docker Hub
       run: |
-        docker tag my-image-name:$(date +%s) ${{ secrets.DOCKER_HUB_USERNAME }}/square-chat:latest
+        docker tag square-chat:$(date +%s) ${{ secrets.DOCKER_HUB_USERNAME }}/square-chat:latest
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/square-chat:latest
