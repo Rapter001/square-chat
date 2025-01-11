@@ -3,3 +3,4 @@ Flask-Login
 Flask-OAuthlib
 flask-socketio
 authlib
+python-dotenv
