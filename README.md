@@ -88,7 +88,7 @@ $ docker run --name square-chat -d -p 5000:5000 -v path:/app/data/ rapter001/squ
      http://your-domain-name:5000/login/authorized
      ```
      or
-     - without any ports for port 80 like http://chat.rapter001.duckdns.org/login/authorized
+     - without any ports for port 80 like http://chat.rapter.pro/login/authorized
      Replace `your-domain-name` with your actual domain, and `5000` with the port Square Chat is running on (e.g., `http://mydomain.com:8080/login/authorized`).
 
    - Make sure to add `/login/authorized` at the end of the URL in the Google Cloud Console, regardless of whether you are using `localhost` or a domain.
