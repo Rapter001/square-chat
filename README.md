@@ -7,7 +7,7 @@ Square Chat is a sleek and modern web chat application designed for simplicity a
 ## Features
 
 - **Real-time Messaging**: Chat with friends and colleagues in real-time.
-- **Private room chat**: Chat with friends and colleagues in private rooms
+- **Google Login**: Seamlessly integrate with your Google account for easy login.
 - **User-friendly Interface**: Simple and intuitive interface for easy navigation.
 - **File Sharing (Coming Soon)**: Share files effortlessly with other users.
 
@@ -47,7 +47,6 @@ To use Square Chat, follow these steps:
 - `http://127.0.0.1:5000`
 - `http://localhost:5000`
 - `http://your-computers-ip:5000`
-- https://chat.rapter.pro
 
 ---
 

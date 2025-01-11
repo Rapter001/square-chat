@@ -1,202 +1,171 @@
+import json
 import os
-from utils import save_profile_pic
-from models import db, User, Message
-from flask_sqlalchemy import SQLAlchemy
-from forms import LoginForm, SignupForm, UpdateAccountForm
-from flask_socketio import SocketIO, join_room, leave_room, send
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from datetime import datetime
+from flask import Flask, redirect, url_for, session, render_template
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_socketio import SocketIO, emit
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# App setup
 app = Flask(__name__)
-
-# Generate a random secret key for session management
-app.secret_key = os.urandom(24)
-
-# Set up database configuration for SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///square-chat.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Configure the folder to upload profile pictures
-app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
-
-# Initialize the database with the Flask app
-db.init_app(app)
-
-# Initialize SocketIO for real-time communication
+app.secret_key = "grgrtkyrtty547ujhd"
 socketio = SocketIO(app)
 
-# Initialize login manager to handle user sessions
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+# File to store user data and messages
+USER_DATA_FILE = "data/users.json"
+MESSAGES_FILE = "data/messages.json"
 
-# Dictionary to keep track of active users
-users = {}
+# Function to initialize the JSON files
+def initialize_json_files():
+    # Check and initialize users.json
+    if not os.path.exists(USER_DATA_FILE):
+        with open(USER_DATA_FILE, "w") as f:
+            json.dump({}, f, indent=4)
 
-# Dictionary to keep track of active chat rooms
-rooms = {}
+    # Check and initialize messages.json
+    if not os.path.exists(MESSAGES_FILE):
+        with open(MESSAGES_FILE, "w") as f:
+            json.dump([], f, indent=4)
 
-# Create the database tables within the app context
-with app.app_context():
-    db.create_all()
+# Call the initialization function at the start
+initialize_json_files()
 
-# Load a user by their ID for session management
+# Google OAuth Setup
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv("google_oauth_client_id"),
+    client_secret=os.getenv("google_oauth_client_secret"),
+    access_token_url='https://oauth2.googleapis.com/token',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    api_base_url='https://www.googleapis.com/oauth2/v1/',
+    client_kwargs={
+        'scope': 'openid email profile',
+        'prompt': 'consent',
+    },
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
+)
+
+# Flask-Login setup
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'home'
+
+# User model
+class User(UserMixin):
+    def __init__(self, id_, name, email, profile_img):
+        self.id = id_
+        self.name = name
+        self.email = email
+        self.profile_img = profile_img
+
+    @staticmethod
+    def get(user_id):
+        with open(USER_DATA_FILE, "r") as f:
+            users = json.load(f)
+        user_data = users.get(user_id)
+        if user_data:
+            return User(
+                id_=user_data["id"],
+                name=user_data["name"],
+                email=user_data["email"],
+                profile_img=user_data["profile_img"]
+            )
+        return None
+
+    @staticmethod
+    def save(user):
+        with open(USER_DATA_FILE, "r") as f:
+            users = json.load(f)
+        users[user.id] = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "profile_img": user.profile_img
+        }
+        with open(USER_DATA_FILE, "w") as f:
+            json.dump(users, f, indent=4)
+
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.get(user_id)
 
-# Route for the signup page (register new user)
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    form = SignupForm()
-    if form.validate_on_submit():
-        # Check if the username or email already exists
-        existing_user = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
-        if existing_user:
-            flash('Username or Email already exists.', 'danger')
-        else:
-            # Hash the password and optionally save profile picture
-            hashed_password = generate_password_hash(form.password.data)
-            profile_pic = None
-            if form.profile_pic.data:
-                profile_pic = save_profile_pic(form.profile_pic.data)
-            # Create a new user and add to the database
-            user = User(username=form.username.data, email=form.email.data, password_hash=hashed_password, profile_pic=profile_pic)
-            db.session.add(user)
-            db.session.commit()
-            flash('Account created successfully! You can now log in.', 'success')
-            return redirect(url_for('login'))
-    return render_template('signup.html', form=form)
-
-# Route for the login page (authenticate users)
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        # Check if user exists by username or email and validate password
-        user = User.query.filter((User.username == form.username.data) | (User.email == form.username.data)).first()
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            # Redirect user to the chat room if they have selected one
-            room = session.get('room', '')
-            if room:
-                return redirect(url_for('chat'))
-            else:
-                return redirect(url_for('index'))
-        else:
-            flash('Login Unsuccessful. Please check username/email and password', 'danger')
-    return render_template('login.html', form=form)
-
-# Route to log out the user
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-# Route for the index page (main entry to select or create a chat room)
-@app.route('/', methods=['GET', 'POST'])
-@login_required
-def index():
-    if request.method == 'POST':
-        # Create or join a room
-        room = request.form['room']
-        session['room'] = room
-        if room not in rooms:
-            rooms[room] = []
+# Routes
+@app.route('/')
+def home():
+    if current_user.is_authenticated:
         return redirect(url_for('chat'))
-
-    room = request.args.get('room')
-    if room:
-        session['room'] = room
-        if room not in rooms:
-            rooms[room] = []
-        return redirect(url_for('chat'))
-        
     return render_template('index.html')
 
-# Route for the chat room
+@app.route('/login')
+def login():
+    redirect_uri = url_for('authorized', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/login/authorized')
+def authorized():
+    token = google.authorize_access_token()
+    user_info = google.get('userinfo').json()
+    session['google_token'] = token
+
+    # Create a user object and save it to JSON
+    user = User(
+        id_=user_info['id'],
+        name=user_info['name'],
+        email=user_info['email'],
+        profile_img=user_info['picture']
+    )
+    User.save(user)
+    login_user(user)
+
+    return redirect(url_for('chat'))
+
 @app.route('/chat')
 @login_required
 def chat():
-    room = session.get('room', '')
-    if room == '':
-        return redirect(url_for('index'))
-    return render_template('chat.html', username=current_user.username, room=room, profile_pic=current_user.profile_pic)
+    try:
+        with open(MESSAGES_FILE, "r") as file:
+            messages = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        messages = []
+    
+    return render_template('chat.html', name=current_user.name, profile_img=current_user.profile_img, messages=messages)
 
-# Route to update user profile (username, email, and profile picture)
-@app.route('/profile', methods=['GET', 'POST'])
+@app.route('/logout')
 @login_required
-def profile():
-    form = UpdateAccountForm()
-    if form.validate_on_submit():
-        # Check if the new username or email is already taken by another user
-        if form.username.data != current_user.username:
-            existing_user = User.query.filter_by(username=form.username.data).first()
-            if existing_user:
-                flash('Username already exists.', 'danger')
-                return redirect(url_for('profile'))
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
 
-        if form.email.data != current_user.email:
-            existing_email = User.query.filter_by(email=form.email.data).first()
-            if existing_email:
-                flash('Email already exists.', 'danger')
-                return redirect(url_for('profile'))
-
-        # Update user's username, email, and optionally profile picture and password
-        current_user.username = form.username.data
-        current_user.email = form.email.data
-
-        if form.profile_pic.data:
-            profile_pic = save_profile_pic(form.profile_pic.data)
-            current_user.profile_pic = profile_pic
-
-        if form.password.data:
-            current_user.password_hash = generate_password_hash(form.password.data)
-
-        db.session.commit()
-        flash('Your account has been updated!', 'success')
-        return redirect(url_for('profile'))
-
-    profile_pic = url_for('static', filename='profile_pics/' + current_user.profile_pic) if current_user.profile_pic else None
-    form.username.data = current_user.username
-    form.email.data = current_user.email
-    return render_template('profile.html', form=form, profile_pic=profile_pic)
-
-# Route to get chat messages for a specific room
-@app.route('/messages/<room>')
-@login_required
-def get_messages(room):
-    # Retrieve all messages for the given room, ordered by timestamp
-    messages = Message.query.filter_by(room=room).order_by(Message.timestamp).all()
-    return jsonify([{'username': msg.username, 'content': msg.content, 'timestamp': msg.timestamp, 'profile_pic': User.query.filter_by(username=msg.username).first().profile_pic} for msg in messages])
-
-# Handle receiving a new chat message via SocketIO
-@socketio.on('message')
+@socketio.on('send_message')
 def handle_message(data):
-    room = session.get('room')
-    username = current_user.username
-    content = data['msg']
-    # Save the message to the database
-    message = Message(username=username, room=room, content=content)
-    db.session.add(message)
-    db.session.commit()
-    # Send the message to all users in the room
-    send({'msg': content, 'username': username, 'profile_pic': current_user.profile_pic}, room=room)
+    try:
+        with open(MESSAGES_FILE, "r") as file:
+            messages = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        messages = []
 
-# Handle a user joining a chat room via SocketIO
-@socketio.on('join')
-def handle_join(data):
-    username = data['username']
-    room = data['room']
-    join_room(room)
+    # Get current server time with AM/PM format
+    server_time = datetime.now().strftime("%B %d, %Y %I:%M:%S %p")  # Month Day, Year Hour:Minute:Second AM/PM
+    # User's local time with AM/PM format
+    user_local_time = datetime.now().strftime("%B %d, %Y %I:%M:%S %p")  # Month Day, Year Hour:Minute:Second AM/PM
 
-# Handle a user leaving a chat room via SocketIO
-@socketio.on('leave')
-def handle_leave(data):
-    username = data['username']
-    room = data['room']
-    leave_room(room)
+    message_data = {
+        'name': current_user.name,
+        'message': data['message'],
+        'profile_img': current_user.profile_img,
+        'timestamp': server_time,
+        'user_local_time': user_local_time
+    }
+    messages.append(message_data)
 
-# Run the Flask app with SocketIO for real-time functionality
+    with open(MESSAGES_FILE, "w") as file:
+        json.dump(messages, file, indent=4)
+
+    emit('message', message_data, broadcast=True)
+
 if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port="5000", debug=False)

@@ -2,77 +2,153 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Square Chat | Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="{{ url_for('static', filename='img/square-chat.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <title>Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.3/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        #chatbox {
+            flex: 1;
+            padding: 20px;
+            overflow-y: scroll;
+            border-top: 2px solid #333;
+            background-color: #1a1a1a;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .message img {
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        .message-content {
+            color: #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-content .name {
+            font-weight: bold;
+        }
+        .message-content .text {
+            margin-top: 5px;
+        }
+        .message-content .timestamp {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+        #message {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #333;
+            color: white;
+            width: 90%;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+            width: 10%;
+            margin-left: 5px;
+        }
+        button:hover {
+            background-color: #357ae8;
+        }
+        .logout-button {
+            background-color: #e53935;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
     <div class="chat-container">
-        <h2>Room: {{ room }}</h2>
-        <ul id="messages"></ul>
-        <form id="messageForm">
-            <input id="messageInput" autocomplete="off" required>
-            <button>Send</button>
-            <a href="{{ url_for('profile') }}" class="button">Manage Profile</a>
-            <a href="{{ url_for('logout') }}" class="button">Logout</a>
-        </form>
-        <button id="shareLinkButton" class="button">Share Room Link</button>
-        <input type="text" id="shareLinkInput" style="position:absolute; left:-9999px;">
+        <div id="chatbox">
+            {% for msg in messages %}
+            <div class="message">
+                <img src="{{ msg.profile_img }}" alt="{{ msg.name }}">
+                <div class="message-content">
+                    <div class="name">{{ msg.name }}</div>
+                    <div class="text">{{ msg.message }}</div>
+                    <div class="timestamp">{{ msg.timestamp }}</div> <!-- Displaying formatted time -->
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <input id="message" type="text" placeholder="Type your message..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <a href="{{ url_for('logout') }}">
+            <button class="logout-button">Logout</button>
+        </a>
     </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const socket = io();
-            const username = "{{ username }}";
-            const room = "{{ room }}";
-            const profilePic = "{{ profile_pic }}";
+        const socket = io.connect();
+        const chatbox = document.getElementById('chatbox');
+        const messageInput = document.getElementById('message');
 
-            socket.emit('join', {username, room});
-
-            const form = document.getElementById('messageForm');
-            const input = document.getElementById('messageInput');
-            const messages = document.getElementById('messages');
-            const shareLinkButton = document.getElementById('shareLinkButton');
-            const shareLinkInput = document.getElementById('shareLinkInput');
-
-            const scrollToBottom = () => {
-                messages.scrollTop = messages.scrollHeight;
-            };
-
-            shareLinkButton.addEventListener('click', () => {
-                const url = `${window.location.origin}/?room=${room}`;
-                shareLinkInput.value = url;
-                shareLinkInput.select();
-                document.execCommand('copy');
-                alert('Room link copied to clipboard!');
-            });
-
-            fetch(`/messages/${room}`)
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(msg => {
-                        const item = document.createElement('li');
-                        item.innerHTML = `<img src="/static/profile_pics/${msg.profile_pic}" class="profile-pic" draggable="false"> <strong>${msg.username}:</strong> ${msg.content}`;
-                        messages.appendChild(item);
-                    });
-                    scrollToBottom();
-                });
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const msg = input.value;
-                socket.emit('message', {msg, profile_pic: profilePic});
-                input.value = '';
-            });
-
-            socket.on('message', (data) => {
-                const item = document.createElement('li');
-                item.innerHTML = `<img src="/static/profile_pics/${data.profile_pic}" class="profile-pic" draggable="false"> <strong>${data.username}:</strong> ${data.msg}`;
-                messages.appendChild(item);
-                scrollToBottom();
-            });
+        // Scroll to the bottom when new messages are received
+        socket.on('message', (data) => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerHTML = `
+                <img src="${data.profile_img}" alt="${data.name}">
+                <div class="message-content">
+                    <div class="name">${data.name}</div>
+                    <div class="text">${data.message}</div>
+                    <div class="timestamp">${data.user_local_time}</div>  <!-- Displaying user's local time -->
+                </div>
+            `;
+            chatbox.appendChild(messageElement);
+            chatbox.scrollTop = chatbox.scrollHeight;  // Auto-scroll to bottom
         });
+
+        // Function to send a message
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message.trim() !== "") {
+                socket.emit('send_message', { message });
+                messageInput.value = '';  // Clear the input
+            }
+        }
+
+        // Ensure auto-scrolling on page load
+        window.onload = () => {
+            chatbox.scrollTop = chatbox.scrollHeight;
+        };
     </script>
 </body>
 </html>
