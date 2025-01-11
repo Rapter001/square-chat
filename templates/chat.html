@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Square Chat | Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img/square-chat.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>Room: {{ room }}</h2>
+        <ul id="messages"></ul>
+        <form id="messageForm">
+            <input id="messageInput" autocomplete="off" required>
+            <button>Send</button>
+            <a href="{{ url_for('profile') }}" class="button">Manage Profile</a>
+            <a href="{{ url_for('logout') }}" class="button">Logout</a>
+        </form>
+        <button id="shareLinkButton" class="button">Share Room Link</button>
+        <input type="text" id="shareLinkInput" style="position:absolute; left:-9999px;">
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+            const username = "{{ username }}";
+            const room = "{{ room }}";
+            const profilePic = "{{ profile_pic }}";
+
+            socket.emit('join', {username, room});
+
+            const form = document.getElementById('messageForm');
+            const input = document.getElementById('messageInput');
+            const messages = document.getElementById('messages');
+            const shareLinkButton = document.getElementById('shareLinkButton');
+            const shareLinkInput = document.getElementById('shareLinkInput');
+
+            const scrollToBottom = () => {
+                messages.scrollTop = messages.scrollHeight;
+            };
+
+            shareLinkButton.addEventListener('click', () => {
+                const url = `${window.location.origin}/?room=${room}`;
+                shareLinkInput.value = url;
+                shareLinkInput.select();
+                document.execCommand('copy');
+                alert('Room link copied to clipboard!');
+            });
+
+            fetch(`/messages/${room}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(msg => {
+                        const item = document.createElement('li');
+                        item.innerHTML = `<img src="/static/profile_pics/${msg.profile_pic}" class="profile-pic" draggable="false"> <strong>${msg.username}:</strong> ${msg.content}`;
+                        messages.appendChild(item);
+                    });
+                    scrollToBottom();
+                });
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const msg = input.value;
+                socket.emit('message', {msg, profile_pic: profilePic});
+                input.value = '';
+            });
+
+            socket.on('message', (data) => {
+                const item = document.createElement('li');
+                item.innerHTML = `<img src="/static/profile_pics/${data.profile_pic}" class="profile-pic" draggable="false"> <strong>${data.username}:</strong> ${data.msg}`;
+                messages.appendChild(item);
+                scrollToBottom();
+            });
+        });
+    </script>
+</body>
+</html>
