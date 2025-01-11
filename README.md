@@ -1,3 +1,6 @@
+
+# Square Chat - Real-time Web Chat Application
+
 ## Overview
 
 Square Chat is a sleek and modern web chat application designed for simplicity and efficiency.
@@ -23,82 +26,96 @@ Square Chat is a sleek and modern web chat application designed for simplicity a
 
 To install Square Chat, follow these steps:
 
-1. **Pull the Docker Image**:
+### 1. **Pull the Docker Image**:
 
+```bash
 $ docker pull rapter001/square-chat:latest
+```
 
-2. **Run the Docker Container**:
+### 2. **Run the Docker Container**:
 
+```bash
 $ docker run --name square-chat -d -p 5000:5000 -v path:/app/data/ rapter001/square-chat
+```
 
-- Replace `path` in `-v path:/app/data/` with the desired path to save messages, rooms, emails, passwords on the host machine.
-- Optionally, remove `-v path:/app/data/` to save messages, rooms, emails, passwords to the Docker container.
+- Replace `path` in `-v path:/app/data/` with the desired path to save messages, rooms, emails, and passwords on the host machine.
+- Optionally, remove `-v path:/app/data/` to save messages, rooms, emails, and passwords to the Docker container.
 - Replace `-p 5000:5000` with `-p 80:5000` to change the port to port 80 or with any other desired port.
 
 ---
 
 ## Usage
 
-To use Square Chat, follow these steps:
-
-### Step 1: Create OAuth 2.0 Credentials on Google Cloud Console
+### Step 1: **Create OAuth 2.0 Credentials on Google Cloud Console**
 
 1. **Open Your Web Browser**.
 2. **Navigate to the Google Cloud Console**:
-
-   - `https://console.cloud.google.com/`
+   `https://console.cloud.google.com/`
 3. **Create a New Project**:
-
    - Click on the "Select a project" dropdown menu.
    - Click on "New Project".
    - Enter a project name and click on "Create".
 4. **Enable the Google Sign-In API**:
-
    - Navigate to the API Library page.
    - Search for "Google Sign-In API".
    - Click on the result, then click on the "Enable" button.
 5. **Create OAuth 2.0 Credentials**:
-
    - Navigate to the API Credentials page.
    - Click on "Create Credentials" and select "OAuth client ID".
-   - Select "Web application" and enter a authorized JavaScript origins.
-   - Click on "Create" and copy the Client ID and Client secret.
+   - Select "Web application" and enter an authorized JavaScript origin.
+   - Click on "Create" and copy the Client ID and Client Secret.
 
-### Step 2: Configure OAuth 2.0 Credentials for Square Chat
+### Step 2: **Configure OAuth 2.0 Credentials for Square Chat**
 
 1. **Create a .env File**:
-
    - Create a new file named `.env` in the root directory of your project.
    - Add the following lines to the file:
-
      ```
      google_oauth_client_id=your_client_id
      google_oauth_client_secret=your_client_secret
      ```
    - Replace `your_client_id` and `your_client_secret` with the values you copied in Step 1.
-2. **Configure Docker Environment Variables**:
 
-   - Alternatively, you can configure the environment variables in your Docker container.
+2. **Configure the Authorized Redirect URIs**:
+   - **Local Setup**: If you are running Square Chat locally, the authorized redirect URI in the Google Cloud Console must be configured as:
+     ```
+     http://localhost:5000/login/authorized
+     ```
+     If using a different port, replace `5000` with your specific port (e.g., `http://localhost:8080/login/authorized`).
+
+   - **Domain Setup**: If you're using a domain, the authorized redirect URI must be:
+     ```
+     http://your-domain-name:5000/login/authorized
+     ```
+     or
+     - without any ports for port 80 like http://chat.rapter001.duckdns.org/login/authorized
+     Replace `your-domain-name` with your actual domain, and `5000` with the port Square Chat is running on (e.g., `http://mydomain.com:8080/login/authorized`).
+
+   - Make sure to add `/login/authorized` at the end of the URL in the Google Cloud Console, regardless of whether you are using `localhost` or a domain.
+
+3. **Configure Docker Environment Variables** (Optional):
+   - Alternatively, you can configure the environment variables directly in the Docker container.
    - Add the following lines to your `docker run` command:
-
      ```
      -e google_oauth_client_id=your_client_id
      -e google_oauth_client_secret=your_client_secret
      ```
    - Replace `your_client_id` and `your_client_secret` with the values you copied in Step 1.
 
-### Step 3: Run Square Chat
+### Step 3: **Run Square Chat**
 
 1. **Run the Docker Container**:
-
    - Follow the instructions in the [Installation](#installation) section to run the Docker container.
-2. **Access Square Chat**:
 
-   - Open your web browser and navigate to `http://127.0.0.1:5000` or `http://localhost:5000`.
-- You should now be able to use Google Sign-In with Square Chat.
-- If you need help, join my Discord at: <a href="https://rapter.pages.dev/links">https://rapter.pages.dev/links</a>
-____________________________________________________
+2. **Access Square Chat**:
+   - Open your web browser and navigate to `http://127.0.0.1:5000` or `http://localhost:5000` if you are running the app locally.
+   - If you are using a domain, navigate to the domain’s URL (e.g., `http://mydomain.com:5000`).
+   - You should now be able to use Google Sign-In with Square Chat.
+
+---
 
 ## Acknowledgments
 
 Square Chat is a work in progress, and improvements are continually being made. Thank you for your patience and support as we strive to provide the best chatting experience possible.
+
+If you need help, join my Discord at: [Rapter Links](https://rapter.pages.dev/links)
