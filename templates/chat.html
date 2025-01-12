@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.3/socket.io.min.js"></script>
     <style>
         body {
@@ -119,7 +119,7 @@
         const socket = io.connect();
         const chatbox = document.getElementById('chatbox');
         const messageInput = document.getElementById('message');
-
+    
         // Scroll to the bottom when new messages are received
         socket.on('message', (data) => {
             const messageElement = document.createElement('div');
@@ -129,26 +129,34 @@
                 <div class="message-content">
                     <div class="name">${data.name}</div>
                     <div class="text">${data.message}</div>
-                    <div class="timestamp">${data.user_local_time}</div>  <!-- Displaying user's local time -->
+                    <div class="timestamp">${data.user_local_time}</div>
                 </div>
             `;
             chatbox.appendChild(messageElement);
-            chatbox.scrollTop = chatbox.scrollHeight;  // Auto-scroll to bottom
+            chatbox.scrollTop = chatbox.scrollHeight; // Auto-scroll to bottom
         });
-
+    
         // Function to send a message
         function sendMessage() {
             const message = messageInput.value;
             if (message.trim() !== "") {
                 socket.emit('send_message', { message });
-                messageInput.value = '';  // Clear the input
+                messageInput.value = ''; // Clear the input
             }
         }
-
+    
+        // Add event listener for Enter key
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission
+                sendMessage(); // Trigger sendMessage function
+            }
+        });
+    
         // Ensure auto-scrolling on page load
         window.onload = () => {
             chatbox.scrollTop = chatbox.scrollHeight;
         };
-    </script>
+    </script>    
 </body>
 </html>
