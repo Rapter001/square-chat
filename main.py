@@ -14,7 +14,7 @@ load_dotenv()
 # App setup
 app = Flask(__name__)
 # Secret key used by Flask for session management and security (ensure it's kept private)
-app.secret_key = "%*pSoa%E33CjxbOOq2^2StP886NeKINI$mRpMgTtTVJkz#@u6vioSp8iWV#j5e5A35k3GL20cG^cgDpl@SR$81XWQ1MjFBN*AJj6nwKF9KF7hy2YuagNNbHV2ku2Tja1"
+app.secret_key = "%*pSoa%E33CjxbOOq2"
 # Initialize SocketIO for real-time communication
 socketio = SocketIO(app)
 
