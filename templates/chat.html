@@ -22,14 +22,14 @@
             </div>
             {% endfor %}
         </div>
-        <div style="display: flex; justify-content: center; align-items: center;">
+        <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
             <input id="message" type="text" placeholder="Type your message..." />
             <button onclick="sendMessage()">Send</button>
         </div>
         <a href="{{ url_for('logout') }}">
             <button class="logout-button">Logout</button>
         </a>
-    </div>
+    </div>    
     <script src="./static/js/chat.js"></script>
 </body>
 </html>
