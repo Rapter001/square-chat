@@ -1,0 +1,12 @@
+version: '3'
+services:
+  square-chat:
+    image: rapter001/square-chat:latest
+    container_name: square-chat
+    ports:
+      - "5000:5000"
+    volumes:
+      - path:/app/data/
+    environment:
+      - google_oauth_client_id=your_client_id
+      - google_oauth_client_secret=your_client_secret
