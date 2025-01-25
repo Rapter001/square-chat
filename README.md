@@ -1,3 +1,6 @@
+<div style="text-align: center;">
+    <img src="https://raw.githubusercontent.com/Rapter001/square-chat/refs/heads/main/static/img/square-chat.png" alt="Square Chat Logo" width="150" height="150"/>
+</div>
 
 # Square Chat - Real-time Web Chat Application
 
