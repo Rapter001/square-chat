@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/Rapter001/refs/heads/main/static/img/square-chat.png" alt="Square Chat Logo" width="150" height="150">
+<img src="https://raw.githubusercontent.com/Rapter001/square-chat/refs/heads/main/static/img/square-chat.png" alt="Square Chat Logo" width="150" height="150">
 
 # Square Chat - Real-time Web Chat Application
 
