@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Sqaure Chat | Chat</title>
-    <link rel="stylesheet" href="./static/css/chat.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.3/socket.io.min.js"></script>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/square-chat.png') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/square-chat.png') }}" type="image/x-icon">
 </head>
 <body>
     <div class="chat-container">
