@@ -1,130 +1,184 @@
+/* General Styles */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #121212;
-    color: white;
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: #0d1117;
+    color: #c9d1d9;
     display: flex;
     flex-direction: column;
     height: 100vh;
     margin: 0;
+    overflow: hidden;
 }
 
+/* Chat Container */
 .chat-container {
     display: flex;
     flex-direction: column;
     height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
+/* Chatbox */
 #chatbox {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    border-top: 2px solid #333;
-    background-color: #1a1a1a;
+    border-top: 2px solid #21262d;
+    background-color: #161b22;
     margin-bottom: 10px;
-    border-radius: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    scrollbar-width: thin;
+    scrollbar-color: #444 #161b22;
 }
 
+#chatbox::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chatbox::-webkit-scrollbar-thumb {
+    background-color: #444;
+    border-radius: 4px;
+}
+
+#chatbox::-webkit-scrollbar-track {
+    background-color: #161b22;
+}
+
+/* Message Styles */
 .message {
     margin-bottom: 15px;
-    padding: 10px;
-    background-color: #333;
-    border-radius: 8px;
+    padding: 12px;
+    background-color: #21262d;
+    border-radius: 10px;
     display: flex;
     align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.message:hover {
+    transform: scale(1.02);
 }
 
 .message img {
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    border: 2px solid #444;
 }
 
 .message-content {
-    color: #ddd;
+    color: #c9d1d9;
     display: flex;
     flex-direction: column;
 }
 
 .message-content .name {
     font-weight: bold;
+    color: #58a6ff;
 }
 
 .message-content .text {
     margin-top: 5px;
+    line-height: 1.5;
 }
 
 .message-content .timestamp {
     font-size: 0.8rem;
-    color: #888;
+    color: #8b949e;
     margin-top: 5px;
 }
 
+/* Input Field */
 #message {
-    padding: 10px;
+    padding: 12px;
     margin: 10px 0;
-    border-radius: 5px;
-    border: none;
-    background-color: #333;
-    color: white;
+    border-radius: 8px;
+    border: 1px solid #21262d;
+    background-color: #161b22;
+    color: #c9d1d9;
     font-size: 1rem;
     flex: 1;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+#message:focus {
+    border-color: #58a6ff;
 }
 
 input#message {
-    width: 70%; /* Adjust width for input field */
-    margin-right: 10px; /* Space between input and button */
+    width: 70%;
+    margin-right: 10px;
 }
 
+/* Button Styles */
 button {
-    background-color: #4285F4;
+    background-color: #008f83;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 24px;
     font-size: 1rem;
     cursor: pointer;
-    border-radius: 5px;
-    transition: 0.3s;
-    flex-shrink: 0; /* Prevent button from shrinking */
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 button:hover {
-    background-color: #357ae8;
+    background-color: #004d46;
+    transform: translateY(-2px);
 }
 
+button:active {
+    transform: translateY(0);
+}
+
+/* Logout Button */
 .logout-button {
-    background-color: #e53935;
-    margin: 10px auto; /* Center the button */
-    padding: 10px 20px;
+    background-color: #d73a49;
+    margin: 10px auto;
+    padding: 12px 24px;
     font-size: 1rem;
     display: block;
-    width: 50%; /* Reduced width for logout button */
+    width: 50%;
     text-align: center;
-    border-radius: 5px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .logout-button:hover {
-    background-color: #d32f2f;
+    background-color: #e5534b;
+    transform: translateY(-2px);
 }
 
-/* Responsive adjustments for smaller screens */
+.logout-button:active {
+    transform: translateY(0);
+}
+
+/* Responsive Adjustments */
 @media (max-width: 768px) {
     #message {
         font-size: 0.9rem;
-        padding: 8px;
+        padding: 10px;
     }
 
     button {
-        padding: 10px;
+        padding: 10px 20px;
         font-size: 0.9rem;
     }
 
     .logout-button {
-        width: 60%; /* Slightly wider on smaller screens */
+        width: 70%;
         font-size: 0.9rem;
     }
 
     input#message {
-        width: 65%; /* Adjust input width on smaller screens */
+        width: 65%;
     }
 }
