@@ -34,16 +34,16 @@ socketio = SocketIO(app)
 # Define database models
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
-    
+
     id = db.Column(db.String(128), primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
     profile_img = db.Column(db.String(256))
-    
+
     @staticmethod
     def get(user_id):
         return User.query.get(user_id)
-    
+
     @staticmethod
     def save(user):
         existing_user = User.query.get(user.id)
@@ -57,16 +57,16 @@ class User(db.Model, UserMixin):
 
 class Message(db.Model):
     __tablename__ = 'messages'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String(128), db.ForeignKey('users.id'), nullable=False)
     name = db.Column(db.String(128), nullable=False)
     message = db.Column(db.Text, nullable=False)
     profile_img = db.Column(db.String(256))
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(datetime.timezone.utc))
-    
+
     user = db.relationship('User', backref=db.backref('messages', lazy=True))
-    
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -151,7 +151,7 @@ def chat():
     # Load and display chat messages from the database
     messages = Message.query.order_by(Message.timestamp).all()
     message_dicts = [message.to_dict() for message in messages]
-    
+
     return render_template('chat.html', name=current_user.name, profile_img=current_user.profile_img, messages=message_dicts)
 
 @app.route('/logout')
