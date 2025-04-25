@@ -21,8 +21,12 @@ app = Flask(__name__)
 # Secret key used by Flask for session management and security (ensure it's kept private)
 app.secret_key = "%*pSoa%E33CjxbOOq2"
 
-# PostgreSQL database configuration
+# PostgreSQL database configuration with connection health checks
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,        # check if connection is alive before using it
+    'pool_recycle': 280,          # recycle connections after 280 seconds to avoid stale connections
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
