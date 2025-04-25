@@ -1,7 +1,7 @@
 # Import necessary modules for the application
 import os
 from datetime import datetime
-from flask import Flask, redirect, url_for, session, render_template, jsonify, request
+from flask import Flask, redirect, url_for, render_template, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, emit
 from authlib.integrations.flask_client import OAuth
@@ -14,7 +14,7 @@ load_dotenv()
 # Fetch OAuth credentials from environment variables (from Docker or .env)
 google_oauth_client_id = os.getenv("google_oauth_client_id")
 google_oauth_client_secret = os.getenv("google_oauth_client_secret")
-database_url = os.getenv("DATABASE_URL")
+database_url = os.getenv("database_url")
 
 # App setup
 app = Flask(__name__)
@@ -63,7 +63,7 @@ class Message(db.Model):
     name = db.Column(db.String(128), nullable=False)
     message = db.Column(db.Text, nullable=False)
     profile_img = db.Column(db.String(256))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(datetime.timezone.utc))
     
     user = db.relationship('User', backref=db.backref('messages', lazy=True))
     
@@ -124,7 +124,7 @@ def login():
 @app.route('/login/authorized')
 def authorized():
     try:
-        token = google.authorize_access_token()
+        google.authorize_access_token()
     except Exception as e:
         # Could log e here for debug
         return jsonify({'error': 'Login cancelled or failed', 'message': str(e)}), 400
