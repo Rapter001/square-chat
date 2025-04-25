@@ -1,7 +1,7 @@
 # Import necessary modules for the application
 import os
 from datetime import datetime
-from flask import Flask, redirect, url_for, session, render_template
+from flask import Flask, redirect, url_for, session, render_template, jsonify, request
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, emit
 from authlib.integrations.flask_client import OAuth
@@ -11,13 +11,18 @@ from flask_sqlalchemy import SQLAlchemy
 # Load environment variables from .env file (for local development)
 load_dotenv()
 
+# Fetch OAuth credentials from environment variables (from Docker or .env)
+google_oauth_client_id = os.getenv("google_oauth_client_id")
+google_oauth_client_secret = os.getenv("google_oauth_client_secret")
+database_url = os.getenv("DATABASE_URL")
+
 # App setup
 app = Flask(__name__)
 # Secret key used by Flask for session management and security (ensure it's kept private)
 app.secret_key = "%*pSoa%E33CjxbOOq2"
 
 # PostgreSQL database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
@@ -25,10 +30,6 @@ db = SQLAlchemy(app)
 
 # Initialize SocketIO for real-time communication
 socketio = SocketIO(app)
-
-# Fetch OAuth credentials from environment variables (from Docker or .env)
-google_oauth_client_id = os.getenv("google_oauth_client_id")
-google_oauth_client_secret = os.getenv("google_oauth_client_secret")
 
 # Define database models
 class User(db.Model, UserMixin):
@@ -122,22 +123,27 @@ def login():
 
 @app.route('/login/authorized')
 def authorized():
-    # Once Google returns the token, fetch user information
-    token = google.authorize_access_token()
-    user_info = google.get('userinfo').json()
-    session['google_token'] = token  # Store the token in the session
+    try:
+        token = google.authorize_access_token()
+    except Exception as e:
+        # Could log e here for debug
+        return jsonify({'error': 'Login cancelled or failed', 'message': str(e)}), 400
 
-    # Create a new user object from the retrieved data and save it
+    user_info = google.get('userinfo').json()
+
+    if not user_info or 'id' not in user_info:
+        return jsonify({'error': 'Login cancelled or invalid response'}), 400
+
     user = User(
         id=user_info['id'],
         name=user_info['name'],
         email=user_info['email'],
         profile_img=user_info['picture']
     )
-    User.save(user)  # Save user data to database
-    login_user(user)  # Log the user in
+    User.save(user)
+    login_user(user)
 
-    return redirect(url_for('chat'))  # Redirect to the chat page
+    return redirect(url_for('chat'))
 
 @app.route('/chat')
 @login_required
