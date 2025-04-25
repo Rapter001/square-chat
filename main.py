@@ -11,8 +11,8 @@ from flask_sqlalchemy import SQLAlchemy
 load_dotenv()
 
 # Fetch OAuth credentials and DB URL from environment variables
-google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
-google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+google_oauth_client_id = os.getenv("google_oauth_client_id")
+google_oauth_client_secret = os.getenv("google_oauth_client_secret")
 database_url = os.getenv("database_url")
 secret_key = os.urandom(24)
 
