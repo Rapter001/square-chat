@@ -14,12 +14,13 @@ load_dotenv()
 google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
 google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
 database_url = os.getenv("database_url")
+secret_key = os.urandom(24)
 
 # App setup
 app = Flask(__name__)
 
 # Ensure a secret key is set from environment variables for production
-app.secret_key = os.getenv("secret_key")
+app.secret_key = secret_key if secret_key else os.urandom(24)
 
 # PostgreSQL database configuration with connection health checks
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
