@@ -1,38 +1,36 @@
-# Import necessary modules for the application
 import os
 from datetime import datetime
-from flask import Flask, redirect, url_for, render_template, jsonify
+from flask import Flask, redirect, url_for, render_template, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, emit
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 
-# Load environment variables from .env file (for local development)
+# Load environment variables from .env file
 load_dotenv()
 
-# Fetch OAuth credentials from environment variables (from Docker or .env)
-google_oauth_client_id = os.getenv("google_oauth_client_id")
-google_oauth_client_secret = os.getenv("google_oauth_client_secret")
-database_url = os.getenv("database_url")
+# Fetch OAuth credentials and DB URL from environment variables
+google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
+google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+database_url = os.getenv("DATABASE_URL")
 
 # App setup
 app = Flask(__name__)
-# Secret key used by Flask for session management and security (ensure it's kept private)
-app.secret_key = "%*pSoa%E33CjxbOOq2"
+
+# Ensure a secret key is set from environment variables for production
+app.secret_key = os.getenv("secret_key")
 
 # PostgreSQL database configuration with connection health checks
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,        # check if connection is alive before using it
-    'pool_recycle': 280,          # recycle connections after 280 seconds to avoid stale connections
+    'pool_pre_ping': True,        # Check if connection is alive before using it
+    'pool_recycle': 280,          # Recycle connections after 280 seconds
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize SQLAlchemy
+# Initialize SQLAlchemy and SocketIO
 db = SQLAlchemy(app)
-
-# Initialize SocketIO for real-time communication
 socketio = SocketIO(app)
 
 # Define database models
@@ -85,59 +83,58 @@ class Message(db.Model):
 with app.app_context():
     db.create_all()
 
-# Google OAuth Setup (using environment variables for credentials)
+# Google OAuth Setup
 oauth = OAuth(app)
 google = oauth.register(
     name='google',
-    client_id=os.getenv("google_oauth_client_id"),  # Get client ID from environment variable
-    client_secret=os.getenv("google_oauth_client_secret"),  # Get client secret from environment variable
+    client_id=google_oauth_client_id,
+    client_secret=google_oauth_client_secret,
     access_token_url='https://oauth2.googleapis.com/token',
     authorize_url='https://accounts.google.com/o/oauth2/auth',
     api_base_url='https://www.googleapis.com/oauth2/v1/',
-    client_kwargs={
-        'scope': 'openid email profile',  # Request specific OAuth scopes
-        'prompt': 'consent',  # Always prompt for consent
-    },
+    client_kwargs={'scope': 'openid email profile'},
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
 )
 
 # Flask-Login setup to handle user sessions
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'home'  # Redirect to home if not logged in
+login_manager.login_view = 'home'
 
-# Login manager user loader function
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
 
-# Routes for different app views
+# Routes
 @app.route('/')
 def home():
-    # If the user is authenticated, redirect to the chat page
     if current_user.is_authenticated:
         return redirect(url_for('chat'))
-    return render_template('index.html')  # Render the index page for unauthenticated users
+    return render_template('index.html')
 
 @app.route('/login')
 def login():
-    # Initiate OAuth login process
+    if current_user.is_authenticated:
+        return redirect(url_for('chat'))
     redirect_uri = url_for('authorized', _external=True)
     return google.authorize_redirect(redirect_uri)
 
 @app.route('/login/authorized')
 def authorized():
     try:
-        google.authorize_access_token()
-    except Exception as e:
-        # Could log e here for debug
-        return jsonify({'error': 'Login cancelled or failed', 'message': str(e)}), 400
+        token = google.authorize_access_token()
+        user_info = google.get('userinfo').json()
 
-    user_info = google.get('userinfo').json()
+        if not user_info or 'id' not in user_info:
+            user_info = google.parse_id_token(token)
+
+    except Exception as e:
+        return jsonify({'error': 'Login failed or cancelled', 'message': str(e)}), 400
 
     if not user_info or 'id' not in user_info:
-        return jsonify({'error': 'Login cancelled or invalid response'}), 400
+        return jsonify({'error': 'Invalid user data received from Google'}), 400
 
+    session['user_info'] = user_info
     user = User(
         id=user_info['id'],
         name=user_info['name'],
@@ -152,23 +149,19 @@ def authorized():
 @app.route('/chat')
 @login_required
 def chat():
-    # Load and display chat messages from the database
     messages = Message.query.order_by(Message.timestamp).all()
     message_dicts = [message.to_dict() for message in messages]
-
     return render_template('chat.html', name=current_user.name, profile_img=current_user.profile_img, messages=message_dicts)
 
 @app.route('/logout')
 @login_required
 def logout():
-    # Log the user out and redirect to the home page
     logout_user()
     return redirect(url_for('home'))
 
-# SocketIO event for handling incoming chat messages
+# SocketIO event for chat messages
 @socketio.on('send_message')
 def handle_message(data):
-    # Create and save new message to the database
     new_message = Message(
         user_id=current_user.id,
         name=current_user.name,
@@ -179,12 +172,9 @@ def handle_message(data):
     db.session.add(new_message)
     db.session.commit()
 
-    # Prepare the message data with timestamp information
     message_data = new_message.to_dict()
-
-    # Emit the new message to all connected clients
     emit('message', message_data, broadcast=True)
 
-# Run the app with SocketIO support
+# Run the app with SocketIO
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port="5000", debug=False, allow_unsafe_werkzeug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=False)
