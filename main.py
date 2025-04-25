@@ -1,12 +1,12 @@
 # Import necessary modules for the application
 import os
-import json
 from datetime import datetime
 from flask import Flask, redirect, url_for, session, render_template
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, emit
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
 
 # Load environment variables from .env file (for local development)
 load_dotenv()
@@ -15,6 +15,14 @@ load_dotenv()
 app = Flask(__name__)
 # Secret key used by Flask for session management and security (ensure it's kept private)
 app.secret_key = "%*pSoa%E33CjxbOOq2"
+
+# PostgreSQL database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize SQLAlchemy
+db = SQLAlchemy(app)
+
 # Initialize SocketIO for real-time communication
 socketio = SocketIO(app)
 
@@ -22,28 +30,55 @@ socketio = SocketIO(app)
 google_oauth_client_id = os.getenv("google_oauth_client_id")
 google_oauth_client_secret = os.getenv("google_oauth_client_secret")
 
-# File paths for storing user data and messages (stored as JSON)
-USER_DATA_FILE = "data/users.json"
-MESSAGES_FILE = "data/messages.json"
+# Define database models
+class User(db.Model, UserMixin):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.String(128), primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    profile_img = db.Column(db.String(256))
+    
+    @staticmethod
+    def get(user_id):
+        return User.query.get(user_id)
+    
+    @staticmethod
+    def save(user):
+        existing_user = User.query.get(user.id)
+        if existing_user:
+            existing_user.name = user.name
+            existing_user.email = user.email
+            existing_user.profile_img = user.profile_img
+        else:
+            db.session.add(user)
+        db.session.commit()
 
-# Function to initialize the data folder and JSON files for users and messages
-def initialize_json_files():
-    # Check and create the data folder if it doesn't exist
-    if not os.path.exists("data"):
-        os.makedirs("data")
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(128), db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(128), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    profile_img = db.Column(db.String(256))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref=db.backref('messages', lazy=True))
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'message': self.message,
+            'profile_img': self.profile_img,
+            'timestamp': self.timestamp.strftime("%B %d, %Y %I:%M:%S %p"),
+            'user_local_time': self.timestamp.strftime("%B %d, %Y %I:%M:%S %p")
+        }
 
-    # Initialize users.json if it doesn't exist
-    if not os.path.exists(USER_DATA_FILE):
-        with open(USER_DATA_FILE, "w") as f:
-            json.dump({}, f, indent=4)
-
-    # Initialize messages.json if it doesn't exist
-    if not os.path.exists(MESSAGES_FILE):
-        with open(MESSAGES_FILE, "w") as f:
-            json.dump([], f, indent=4)
-
-# Call the initialization function to ensure the files exist
-initialize_json_files()
+# Create database tables if they don't exist
+with app.app_context():
+    db.create_all()
 
 # Google OAuth Setup (using environment variables for credentials)
 oauth = OAuth(app)
@@ -66,47 +101,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'home'  # Redirect to home if not logged in
 
-# User model class to represent user data and handle loading/saving to JSON
-class User(UserMixin):
-    def __init__(self, id_, name, email, profile_img):
-        self.id = id_
-        self.name = name
-        self.email = email
-        self.profile_img = profile_img
-
-    @staticmethod
-    def get(user_id):
-        # Fetch user data from users.json by user ID
-        with open(USER_DATA_FILE, "r") as f:
-            users = json.load(f)
-        user_data = users.get(user_id)
-        if user_data:
-            return User(
-                id_=user_data["id"],
-                name=user_data["name"],
-                email=user_data["email"],
-                profile_img=user_data["profile_img"]
-            )
-        return None
-
-    @staticmethod
-    def save(user):
-        # Save user data to users.json
-        with open(USER_DATA_FILE, "r") as f:
-            users = json.load(f)
-        users[user.id] = {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "profile_img": user.profile_img
-        }
-        with open(USER_DATA_FILE, "w") as f:
-            json.dump(users, f, indent=4)
-
 # Login manager user loader function
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get(user_id)
+    return User.query.get(user_id)
 
 # Routes for different app views
 @app.route('/')
@@ -131,12 +129,12 @@ def authorized():
 
     # Create a new user object from the retrieved data and save it
     user = User(
-        id_=user_info['id'],
+        id=user_info['id'],
         name=user_info['name'],
         email=user_info['email'],
         profile_img=user_info['picture']
     )
-    User.save(user)  # Save user data to JSON
+    User.save(user)  # Save user data to database
     login_user(user)  # Log the user in
 
     return redirect(url_for('chat'))  # Redirect to the chat page
@@ -144,14 +142,11 @@ def authorized():
 @app.route('/chat')
 @login_required
 def chat():
-    # Load and display chat messages from the JSON file
-    try:
-        with open(MESSAGES_FILE, "r") as file:
-            messages = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        messages = []  # If the file doesn't exist or is empty, use an empty list
-
-    return render_template('chat.html', name=current_user.name, profile_img=current_user.profile_img, messages=messages)
+    # Load and display chat messages from the database
+    messages = Message.query.order_by(Message.timestamp).all()
+    message_dicts = [message.to_dict() for message in messages]
+    
+    return render_template('chat.html', name=current_user.name, profile_img=current_user.profile_img, messages=message_dicts)
 
 @app.route('/logout')
 @login_required
@@ -163,31 +158,19 @@ def logout():
 # SocketIO event for handling incoming chat messages
 @socketio.on('send_message')
 def handle_message(data):
-    # Load current chat messages
-    try:
-        with open(MESSAGES_FILE, "r") as file:
-            messages = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        messages = []
-
-    # Get current server time in a human-readable format
-    server_time = datetime.now().strftime("%B %d, %Y %I:%M:%S %p")
-    # Get the user's local time in a similar format (can be adjusted based on user timezone)
-    user_local_time = datetime.now().strftime("%B %d, %Y %I:%M:%S %p")
+    # Create and save new message to the database
+    new_message = Message(
+        user_id=current_user.id,
+        name=current_user.name,
+        message=data['message'],
+        profile_img=current_user.profile_img,
+        timestamp=datetime.now()
+    )
+    db.session.add(new_message)
+    db.session.commit()
 
     # Prepare the message data with timestamp information
-    message_data = {
-        'name': current_user.name,
-        'message': data['message'],
-        'profile_img': current_user.profile_img,
-        'timestamp': server_time,
-        'user_local_time': user_local_time
-    }
-    messages.append(message_data)
-
-    # Save the updated messages list back to the JSON file
-    with open(MESSAGES_FILE, "w") as file:
-        json.dump(messages, file, indent=4)
+    message_data = new_message.to_dict()
 
     # Emit the new message to all connected clients
     emit('message', message_data, broadcast=True)

@@ -58,10 +58,6 @@ body {
     transition: transform 0.2s ease;
 }
 
-.message:hover {
-    transform: scale(1.02);
-}
-
 .message img {
     border-radius: 50%;
     width: 40px;

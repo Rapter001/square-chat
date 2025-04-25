@@ -1,6 +1,8 @@
-Flask
-Flask-Login
-Flask-OAuthlib
+flask
+flask-login
 flask-socketio
 authlib
 python-dotenv
+eventlet
+flask-sqlalchemy
+psycopg2-binary
