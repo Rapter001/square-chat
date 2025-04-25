@@ -13,7 +13,7 @@ load_dotenv()
 # Fetch OAuth credentials and DB URL from environment variables
 google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
 google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
-database_url = os.getenv("DATABASE_URL")
+database_url = os.getenv("database_url")
 
 # App setup
 app = Flask(__name__)
