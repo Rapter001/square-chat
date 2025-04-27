@@ -1,0 +1,15 @@
+.bg-custom {
+    background-color: #1a1a1a;
+}
+.bg-custom-light {
+    background-color: #2d2d2d;
+}
+.text-custom {
+    color: #ffffff;
+}
+.border-custom {
+    border-color: #3d3d3d;
+}
+.hover\:bg-custom:hover {
+    background-color: #3d3d3d;
+}

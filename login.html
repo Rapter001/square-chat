@@ -116,17 +116,6 @@
             font-size: 1.5rem;
             margin: 0 10px;
         }
-
-        .login-container {
-            background: var(--bg-secondary);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-            width: 90%;
-            max-width: 400px;
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-        }
     </style>
 </head>
 <body>
@@ -134,19 +123,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
+                    <div class="flex-shrink-0">
                         <img src="{{ url_for('static', filename='img/square-chat.png') }}" alt="Square Chat Logo" class="h-8 w-8 mr-2">
-                        <h1 class="text-xl font-bold text-primary">Square Chat</h1>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-sun text-yellow-500"></i>
-                        <label class="theme-switch">
-                            <input type="checkbox" id="themeToggle">
-                            <span class="slider"></span>
-                        </label>
-                        <i class="fas fa-moon text-blue-500"></i>
+                        <h1 class="text-xl font-bold text-primary inline-block">Square Chat</h1>
                     </div>
                 </div>
             </div>
@@ -154,32 +133,33 @@
     </nav>
 
     <div class="flex-1 flex items-center justify-center">
-        <div class="login-container">
-            <div class="text-center mb-8">
+        <div class="max-w-md w-full space-y-8 p-8">
+            <div class="text-center">
                 <img src="{{ url_for('static', filename='img/square-chat.png') }}" alt="Square Chat Logo" class="h-24 w-24 mx-auto mb-4">
-                <h1 class="text-4xl font-bold text-primary mb-2">Square Chat</h1>
-                <p class="text-secondary">Connect and chat with your friends</p>
+                <h1 class="text-4xl font-bold text-primary mb-4">Square Chat</h1>
+                <p class="text-secondary mb-8">Connect and chat with your friends</p>
             </div>
-
-            <div class="space-y-6">
-                <div class="text-center">
-                    <a href="/login" class="inline-flex items-center justify-center w-full bg-accent text-white px-6 py-3 rounded-lg hover:bg-accent/90 focus:outline-none transition duration-300">
-                        <i class="fab fa-google mr-3"></i>
+            <div class="theme-toggle-container">
+                <i class="fas fa-sun theme-icon text-yellow-500"></i>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
+                <i class="fas fa-moon theme-icon text-blue-500"></i>
+            </div>
+            <div class="mt-8 space-y-6">
+                <div>
+                    <a href="/auth/google" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i class="fab fa-google"></i>
+                        </span>
                         Continue with Google
                     </a>
                 </div>
-
-                <div class="text-center">
-                    <p class="text-secondary text-sm">
-                        By continuing, you agree to our <a href="/terms" class="text-accent hover:underline underline">Terms of Service</a> and <a href="/privacy" class="text-accent hover:underline underline">Privacy Policy</a>
-                    </p>
-                </div>
             </div>
-
-            <div class="mt-8 text-center">
-                <p class="text-secondary">
-                    Made with <i class="fas fa-heart text-accent"></i> by Square Chat Team
-                </p>
+            <div class="text-center text-sm text-secondary">
+                <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
+                <p class="mt-4">Made with ❤️ by Square Chat Team</p>
             </div>
         </div>
     </div>
@@ -206,4 +186,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
