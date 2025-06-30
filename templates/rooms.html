@@ -2,133 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Square Chat | Rooms</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Square Chat - Rooms</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rooms.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f3f4f6;
-            --text-primary: #1f2937;
-            --text-secondary: #4b5563;
-            --border-color: #e5e7eb;
-            --accent-color: #3b82f6;
-        }
-
-        .dark-mode {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --text-primary: #ffffff;
-            --text-secondary: #d1d5db;
-            --border-color: #374151;
-            --accent-color: #3b82f6;
-        }
-
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-        }
-
-        .bg-primary {
-            background-color: var(--bg-primary);
-        }
-
-        .bg-secondary {
-            background-color: var(--bg-secondary);
-        }
-
-        .text-primary {
-            color: var(--text-primary);
-        }
-
-        .text-secondary {
-            color: var(--text-secondary);
-        }
-
-        .border-color {
-            border-color: var(--border-color);
-        }
-
-        .room-card {
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .mobile-menu {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .mobile-menu {
-                display: block;
-            }
-            .desktop-menu {
-                display: none;
-            }
-        }
-
-        .theme-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--accent-color);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        /* Add these styles to ensure proper image display */
-        img {
-            object-fit: cover;
-            background-color: var(--bg-secondary);
-        }
-        
-        .relative {
-            position: relative;
-        }
-        
-        .absolute {
-            position: absolute;
-        }
-    </style>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/square-chat.png') }}" type="image/x-icon">
 </head>
-<body>
+<body data-user-id="{{ user.id }}">
+    <!-- Navigation -->
     <nav class="bg-secondary shadow-lg relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -138,10 +20,10 @@
                         <h1 class="text-xl font-bold text-primary">Square Chat</h1>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8 desktop-menu">
-                        <a href="/rooms" class="border-transparent text-secondary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="/rooms" class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg transition-colors">
                             Rooms
                         </a>
-                        <a href="/chat" class="border-transparent text-secondary hover:text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="/chat" class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg transition-colors">
                             Chat
                         </a>
                     </div>
@@ -149,10 +31,9 @@
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-2">
                         <div class="relative">
-                            <img src="{{ user.profile_img or url_for('static', filename='img/default-profile.png') }}" 
+                            <img src="{{ user.profile_pic or url_for('static', filename='img/default-profile.png') }}" 
                                  alt="Profile" 
-                                 class="w-8 h-8 rounded-full object-cover"
-                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ user.name }}&background=3b82f6&color=fff'">
+                                 class="w-8 h-8 rounded-full object-cover">
                             <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                         </div>
                         <span class="text-primary">{{ user.name }}</span>
@@ -174,34 +55,43 @@
                 </div>
             </div>
             <div class="nav-links sm:hidden">
-                <a href="/rooms" class="block px-4 py-2 text-primary hover:bg-secondary">Rooms</a>
-                <a href="/chat" class="block px-4 py-2 text-primary hover:bg-secondary">Chat</a>
+                <a href="/rooms" class="block px-4 py-2 bg-[#008f83] hover:bg-[#004d46] text-white rounded-lg transition-colors mb-2">Rooms</a>
+                <a href="/chat" class="block px-4 py-2 bg-[#008f83] hover:bg-[#004d46] text-white rounded-lg transition-colors">Chat</a>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-            <h2 class="text-2xl font-bold text-primary">Chat Rooms</h2>
-            <button onclick="showCreateRoomModal()" 
-                class="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-lg flex items-center justify-center w-full sm:w-auto">
+    <div class="container mx-auto py-8 px-4 flex-1">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-primary">Chat Rooms</h1>
+            <a href="{{ url_for('create_room') }}" class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg flex items-center transition-colors">
                 <i class="fas fa-plus mr-2"></i> Create Room
-            </button>
+            </a>
         </div>
 
         <!-- Public Rooms Section -->
         <div class="mb-12">
-            <h3 class="text-xl font-semibold text-primary mb-4">Public Rooms</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <h2 class="text-2xl font-bold text-primary mb-6">Public Rooms</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for room in public_rooms %}
-                <div class="room-card rounded-lg shadow p-4 sm:p-6">
-                    <h4 class="text-lg font-semibold text-primary mb-2">{{ room.name }}</h4>
-                    <p class="text-secondary mb-4 text-sm sm:text-base">{{ room.description or 'No description' }}</p>
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 room-actions">
-                        <span class="text-xs sm:text-sm text-secondary">Created {{ room.created_at }}</span>
-                        <a href="/chat?room_id={{ room.id }}" 
-                            class="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-lg text-sm sm:text-base">
-                            Join Room
+                <div class="room-card bg-primary border-color rounded-lg p-6 shadow-lg">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-primary">{{ room.name }}</h2>
+                            <p class="text-secondary mt-1">{{ room.description }}</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                            Public
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-users text-secondary"></i>
+                            <span class="text-secondary">{{ room.members|length }} members</span>
+                        </div>
+                        <a href="{{ url_for('chat', room_id=room.id) }}" 
+                            class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg transition-colors">
+                            Enter Room
                         </a>
                     </div>
                 </div>
@@ -210,298 +100,72 @@
         </div>
 
         <!-- Private Rooms Section -->
-        <div class="mt-8">
-            <h3 class="text-xl font-semibold text-primary mb-4">Private Rooms</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div>
+            <h2 class="text-2xl font-bold text-primary mb-6">Private Rooms</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for room in private_rooms %}
-                <div class="room-card rounded-lg shadow p-4 sm:p-6">
-                    <div class="flex items-center mb-2">
-                        <h4 class="text-lg font-semibold text-primary">{{ room.name }}</h4>
-                        <span class="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">Private</span>
-                    </div>
-                    <div class="flex items-center mb-4">
-                        <span class="text-sm text-secondary">Created by:</span>
-                        <div class="relative ml-2">
-                            <img class="h-6 w-6 rounded-full object-cover" 
-                                 src="{{ room.creator.profile_img or url_for('static', filename='img/default-profile.png') }}" 
-                                 alt="{{ room.creator.name }}"
-                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ room.creator.name }}&background=3b82f6&color=fff'">
-                            <div class="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
+                <div class="room-card bg-primary border-color rounded-lg p-6 shadow-lg">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-primary">{{ room.name }}</h2>
+                            <p class="text-secondary mt-1">{{ room.description }}</p>
                         </div>
-                        <span class="ml-2 text-sm font-medium text-primary">{{ room.creator.name }}</span>
+                        <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                            Private
+                        </span>
                     </div>
-                    <p class="text-secondary mb-4 text-sm sm:text-base">{{ room.description or 'No description' }}</p>
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 room-actions">
-                        <span class="text-xs sm:text-sm text-secondary">Created {{ room.created_at }}</span>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-users text-secondary"></i>
+                            <span class="text-secondary">{{ room.members|length }} members</span>
+                        </div>
                         {% if room.is_creator %}
-                        <a href="/chat?room_id={{ room.id }}" 
-                            class="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-lg text-sm sm:text-base">
-                            Join Room
-                        </a>
+                        <div class="flex items-center space-x-2">
+                            <a href="{{ url_for('chat', room_id=room.id) }}" 
+                                class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg transition-colors">
+                                Manage Room
+                            </a>
+                            <button onclick="copyInviteLink('{{ url_for('join_by_invite', invite_code=room.invite_code, _external=True) }}', this)" 
+                                class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg transition-colors relative group">
+                                <i class="fas fa-link"></i> Share Link
+                                <span class="tooltip hidden absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap">
+                                    Click to copy invite link
+                                </span>
+                            </button>
+                        </div>
                         {% elif room.is_member %}
-                        <a href="/chat?room_id={{ room.id }}" 
-                            class="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-lg text-sm sm:text-base">
+                        <a href="{{ url_for('chat', room_id=room.id) }}" 
+                            class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg transition-colors">
                             Enter Room
                         </a>
                         {% else %}
-                        <button onclick="showJoinRequestModal('{{ room.id }}', '{{ room.name }}')"
-                            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center">
-                            <i class="fas fa-user-plus mr-2"></i> Request to Join
-                        </button>
+                        <a href="{{ url_for('join_by_invite', invite_code=room.invite_code) }}" 
+                            class="bg-[#008f83] hover:bg-[#004d46] text-white px-4 py-2 rounded-lg transition-colors">
+                            Join Room
+                        </a>
                         {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
-
-        <!-- Pending Requests Section (for room owners) -->
-        {% if pending_requests %}
-        <div class="mt-8">
-            <h2 class="text-xl font-semibold text-white mb-4">Pending Join Requests</h2>
-            <div class="space-y-4">
-                {% for request in pending_requests %}
-                <div class="bg-secondary rounded-lg p-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="relative">
-                                <img class="h-8 w-8 rounded-full object-cover" 
-                                     src="{{ request.user.profile_img or url_for('static', filename='img/default-profile.png') }}" 
-                                     alt="{{ request.user.name }}"
-                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ request.user.name }}&background=3b82f6&color=fff'">
-                                <div class="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-white">{{ request.user.name }}</p>
-                                <p class="text-sm text-gray-400">Requested to join: {{ request.room.name }}</p>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="handleJoinRequest('{{ request.id }}', 'accept')" 
-                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm">
-                                Accept
-                            </button>
-                            <button onclick="handleJoinRequest('{{ request.id }}', 'reject')"
-                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">
-                                Reject
-                            </button>
-                        </div>
-                    </div>
-                    {% if request.message %}
-                    <div class="mt-2 p-2 bg-accent rounded-lg">
-                        <p class="text-sm text-gray-300">{{ request.message }}</p>
-                    </div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Modals -->
-        <div id="createRoomModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
-            <div class="bg-primary rounded-lg p-6 max-w-md w-full mx-4">
-                <h2 class="text-2xl font-semibold text-primary mb-4">Create New Room</h2>
-                <form id="createRoomForm" class="space-y-4" onsubmit="return false;">
-                    <div>
-                        <label for="roomName" class="block text-sm font-medium text-primary">Room Name</label>
-                        <input type="text" id="roomName" name="name" required
-                            class="mt-1 block w-full rounded-md border-color bg-primary text-primary shadow-sm focus:border-accent focus:ring-accent">
-                    </div>
-                    <div>
-                        <label for="roomDescription" class="block text-sm font-medium text-primary">Description</label>
-                        <textarea id="roomDescription" name="description" rows="3"
-                            class="mt-1 block w-full rounded-md border-color bg-primary text-primary shadow-sm focus:border-accent focus:ring-accent"></textarea>
-                    </div>
-                    <div class="flex items-center">
-                        <input type="checkbox" id="isPrivate" name="is_private"
-                            class="h-4 w-4 rounded border-color text-accent focus:ring-accent">
-                        <label for="isPrivate" class="ml-2 block text-sm text-primary">Private Room</label>
-                    </div>
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeCreateRoomModal()"
-                            class="px-4 py-2 text-sm font-medium text-primary bg-secondary hover:bg-secondary/80 rounded-md">
-                            Cancel
-                        </button>
-                        <button type="button" onclick="submitCreateRoomForm()"
-                            class="px-4 py-2 text-sm font-medium text-white bg-accent hover:bg-accent/90 rounded-md">
-                            Create Room
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div id="joinRequestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
-            <div class="bg-primary rounded-lg p-6 max-w-md w-full mx-4">
-                <h2 class="text-2xl font-semibold text-primary mb-4">Request to Join</h2>
-                <form id="joinRequestForm">
-                    <input type="hidden" name="room_id">
-                    <div class="mb-4">
-                        <label class="block text-secondary mb-2">Message to Room Creator</label>
-                        <textarea name="message" class="w-full border border-color rounded-lg px-4 py-2 text-primary placeholder-secondary focus:outline-none focus:border-accent" placeholder="Let the room creator know why you want to join..."></textarea>
-                    </div>
-                    <div class="flex justify-end space-x-4">
-                        <button type="button" onclick="closeJoinRequestModal()" class="px-4 py-2 text-secondary hover:text-primary">Cancel</button>
-                        <button type="submit" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 focus:outline-none">Send Request</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <script>
-            // Theme toggle functionality
-            const themeToggle = document.getElementById('themeToggle');
-            
-            // Check for saved theme preference or use system preference
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.body.classList.add('dark-mode');
-                themeToggle.checked = true;
-            }
-
-            themeToggle.addEventListener('change', () => {
-                if (themeToggle.checked) {
-                    document.body.classList.add('dark-mode');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    document.body.classList.remove('dark-mode');
-                    localStorage.setItem('theme', 'light');
-                }
-            });
-
-            const socket = io();
-
-            function showCreateRoomModal() {
-                document.getElementById('createRoomModal').classList.remove('hidden');
-            }
-
-            function closeCreateRoomModal() {
-                document.getElementById('createRoomModal').classList.add('hidden');
-            }
-
-            function showJoinRequestModal(roomId, roomName) {
-                const modal = document.getElementById('joinRequestModal');
-                const form = document.getElementById('joinRequestForm');
-                form.querySelector('input[name="room_id"]').value = roomId;
-                modal.querySelector('h2').textContent = `Request to Join ${roomName}'s Room`;
-                modal.classList.remove('hidden');
-            }
-
-            function closeJoinRequestModal() {
-                document.getElementById('joinRequestModal').classList.add('hidden');
-            }
-
-            function submitCreateRoomForm() {
-                const formData = {
-                    name: document.getElementById('roomName').value,
-                    description: document.getElementById('roomDescription').value,
-                    is_private: document.getElementById('isPrivate').checked
-                };
-
-                fetch('/create_room', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(error => {
-                            throw new Error(error.error || 'Failed to create room');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    closeCreateRoomModal();
-                    window.location.href = `/chat?room_id=${data.id}`;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(error.message || 'Failed to create room. Please try again.');
-                });
-            }
-
-            // Handle Join Request Form
-            document.getElementById('joinRequestForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const data = {
-                    room_id: formData.get('room_id'),
-                    message: formData.get('message')
-                };
-
-                try {
-                    const response = await fetch(`/request_join_room/${data.room_id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ message: data.message })
-                    });
-
-                    if (response.ok) {
-                        alert('Join request sent successfully!');
-                        closeJoinRequestModal();
-                        window.location.reload();
-                    } else {
-                        const error = await response.json();
-                        alert(error.error || 'Failed to send join request');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Failed to send join request');
-                }
-            });
-
-            // Handle join request responses (accept/reject)
-            async function handleJoinRequest(requestId, action) {
-                try {
-                    const response = await fetch(`/handle_join_request/${requestId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ action: action })
-                    });
-
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        const error = await response.json();
-                        alert(error.error || `Failed to ${action} request`);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert(`Failed to ${action} request`);
-                }
-            }
-
-            // Close modals when clicking outside
-            document.querySelectorAll('.fixed').forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.classList.add('hidden');
-                    }
-                });
-            });
-
-            function toggleMobileMenu() {
-                const navLinks = document.querySelector('.nav-links');
-                navLinks.classList.toggle('active');
-            }
-
-            // Close mobile menu when clicking outside
-            document.addEventListener('click', function(event) {
-                const navLinks = document.querySelector('.nav-links');
-                const mobileMenuButton = document.querySelector('.mobile-menu');
-                if (!event.target.closest('.nav-links') && !event.target.closest('.mobile-menu')) {
-                    navLinks.classList.remove('active');
-                }
-            });
-        </script>
     </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/rooms.js') }}"></script>
+    <script>
+        function copyInviteLink(link, button) {
+            navigator.clipboard.writeText(link).then(() => {
+                const tooltip = button.querySelector('.tooltip');
+                tooltip.textContent = 'Link copied!';
+                tooltip.classList.remove('hidden');
+                setTimeout(() => {
+                    tooltip.classList.add('hidden');
+                    tooltip.textContent = 'Click to copy invite link';
+                }, 2000);
+            });
+        }
+    </script>
 </body>
-</html> 
+</html>
